@@ -119,6 +119,38 @@ def test_square_circle_slice():
     return
 
 
+def test_fragments_with_physical():
+    """Test planar surface with holes.
+
+    Construct it with boolean operations and verify that it is the same.
+    """
+    # construct surface using boolean
+    geo_object = pygmsh.opencascade.Geometry(0.04, 0.04)
+    geo_object, square = square_loop(geo_object)
+    geo_object, line_loop = circle_loop(geo_object)
+    surf1 = geo_object.add_plane_surface(square)
+    surf2 = geo_object.add_plane_surface(line_loop)
+
+    geo_object.add_physical([surf1], label=1)
+    geo_object.add_physical([surf2], label=2)
+    surf_diff = geo_object.boolean_fragments([surf1], [surf2])
+    mesh = pygmsh.generate_mesh(geo_object, geo_filename='/Users/tito/untitled.geo')
+    print(compute_volume(mesh))
+    assert np.abs((compute_volume(mesh) - 1) / 1) < 1e-2
+    surf = 1 - 0.1 ** 2 * np.pi
+    outer_mask = np.where(mesh.cell_data["triangle"]["gmsh:physical"] == 1)[0]
+    outer_cells = {}
+    outer_cells["triangle"] = mesh.cells["triangle"][outer_mask]
+
+    inner_mask = np.where(mesh.cell_data["triangle"]["gmsh:physical"] == 2)[0]
+    inner_cells = {}
+    inner_cells["triangle"] = mesh.cells["triangle"][inner_mask]
+
+    value = compute_volume(meshio.Mesh(mesh.points, outer_cells))
+    assert np.abs((value - surf)) < 1e-2 * surf
+    return
+
+
 def test_fragments_diff_union():
     """Test planar surface with holes.
 
@@ -184,7 +216,7 @@ def test_polygon_diff():
 
 if __name__ == "__main__":
     # test_square_circle_hole()
-    # test_square_circle_slice()
+    #test_square_circle_slice()
+    test_fragments_with_physical()
     # test_fragments_diff_union()
     # test_diff_physical_assignment()
-    test_polygon_diff()

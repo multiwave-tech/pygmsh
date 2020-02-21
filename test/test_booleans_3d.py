@@ -279,22 +279,8 @@ def test_fragments():
 
     geo_object.add_physical([vol1], label=1)
     geo_object.add_physical([vol2], label=2)
-    print(vol1.id)
-    print(vol2.id)
     diff = geo_object.boolean_fragments([vol1], [vol2])
-    print(diff.id)
-    '''
-    vol1.id = diff.id
-    resulting_names = [diff.id]
-    geo_object._GMSH_CODE.append(
-        'Physical {}({}) = {{{}}};'.format(
-            'Volume', 0, ', '.join([name for name in resulting_names])
-        ))
-    '''
     mesh = pygmsh.generate_mesh(geo_object)
-    print(compute_volume(mesh))
-    print(diff.is_list)
-    print(diff.id)
     assert np.abs((compute_volume(mesh) - 1) / 1) < 1e-3
     surf = 1 - 0.1 ** 3 * np.pi * 4 / 3
     outer_mask = np.where(mesh.cell_data["tetra"]["gmsh:physical"] == 1)[0]
@@ -311,7 +297,7 @@ def test_fragments():
 
 
 if __name__ == "__main__":
-    #test_compare_cubes()
+    test_compare_cubes()
     #test_cube_sphere_hole()
     #test_cube_sphere_slice()
     #test_diff_union()
@@ -320,4 +306,4 @@ if __name__ == "__main__":
 
     #test_diff_union_with_builtin()
     #test_slice_diff()
-    test_fragments()
+    #test_fragments()
